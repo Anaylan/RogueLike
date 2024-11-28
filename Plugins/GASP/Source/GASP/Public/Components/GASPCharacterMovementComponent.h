@@ -10,7 +10,7 @@
 
 
 USTRUCT(BlueprintType)
-struct PROTOTYPE_API FMovementInformation 
+struct GASP_API FMovementInformation 
 {
 	GENERATED_BODY()
 
@@ -32,7 +32,7 @@ struct PROTOTYPE_API FMovementInformation
  */
 
 UCLASS()
-class PROTOTYPE_API UB_CharacterMovementComponent : public UCharacterMovementComponent
+class GASP_API UB_CharacterMovementComponent : public UCharacterMovementComponent
 {
 	GENERATED_BODY()
 

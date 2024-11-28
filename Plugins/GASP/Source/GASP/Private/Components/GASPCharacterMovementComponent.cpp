@@ -1,6 +1,6 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "Components/Movement/B_CharacterMovementComponent.h"
+#include "Components/B_CharacterMovementComponent.h"
 #include "GameFramework/Character.h"
 
 UB_CharacterMovementComponent::UB_CharacterMovementComponent()

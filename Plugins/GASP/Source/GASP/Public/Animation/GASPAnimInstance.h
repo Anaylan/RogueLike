@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/MovementAnimInstanceProxy.h"
-#include "Core/Types/StructTypes.h"
+#include "Types/StructTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryTypes.h"
 #include "PoseSearch/PoseSearchTrajectoryLibrary.h"
 #include "Animation/AnimExecutionContext.h"
@@ -19,7 +19,7 @@
  * 
  */
 UCLASS()
-class PROTOTYPE_API UB_AnimInstance : public UAnimInstance
+class GASP_API UB_AnimInstance : public UAnimInstance
 {
 	GENERATED_BODY()
 	

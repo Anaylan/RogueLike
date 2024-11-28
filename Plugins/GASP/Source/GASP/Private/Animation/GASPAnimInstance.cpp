@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Animation/B_AnimInstance.h"
-#include "Actors/Characters/B_Character.h"
-#include "Components/Movement/B_CharacterMovementComponent.h"
+#include "Actors/B_Character.h"
+#include "Components/B_CharacterMovementComponent.h"
 #include "PoseSearch/PoseSearchDatabase.h"
-#include "Core/Utils/AnimationUtils.h"
+#include "Utils/AnimationUtils.h"
 #include "PoseSearch/MotionMatchingAnimNodeLibrary.h"
 #include "ChooserFunctionLibrary.h"
 #include "PoseSearch/PoseSearchLibrary.h"
@@ -41,7 +41,7 @@ EOffsetRootBoneMode UB_AnimInstance::GetOffsetRootTranslationMode() const
 	if (IsSlotActive(AnimNames.AnimationSlotName)) return EOffsetRootBoneMode::Release;
 	if (MovementMode.isOnGround())
 	{
-		return MovementState.isMoving() ? EOffsetRootBoneMode::Interpolate : EOffsetRootBoneMode::Release;
+		return isMoving() ? EOffsetRootBoneMode::Interpolate : EOffsetRootBoneMode::Release;
 	}
 	if (MovementMode.isInAir())
 	{
@@ -64,7 +64,7 @@ EOrientationWarpingSpace UB_AnimInstance::GetOrientationWarpingSpace() const
 
 bool UB_AnimInstance::IsEnableSteering() const
 {
-	return MovementState.isMoving() || MovementMode.isInAir();
+	return isMoving() || MovementMode.isInAir();
 }
 
 void UB_AnimInstance::NativeBeginPlay()
@@ -132,7 +132,7 @@ void UB_AnimInstance::UpdateMotionMatchingInfo()
 	if (CharacterInfo.Speed > 0.f) MotionMatching.LastNonZeroVector = CharacterInfo.Velocity;
 	if (MotionMatching.PoseSearchDatabase.IsValid()) MotionMatching.DatabaseTags = MotionMatching.PoseSearchDatabase->Tags;
 
-	MotionMatching.Alpha = MotionMatching.DatabaseTags.Contains("TurnInPlace") ? .5f : .25f;
+	MotionMatching.Alpha = MotionMatching.DatabaseTags.Contains(AnimNames.TurnInPlaceTag) ? .5f : .25f;
 }
 
 void UB_AnimInstance::GenerateTrajectory(float DeltaSeconds)
@@ -143,14 +143,12 @@ void UB_AnimInstance::GenerateTrajectory(float DeltaSeconds)
 		Trajectory, MotionMatching.PreviousDesiredYawRotation, OutTrajectory,
 		-1.f, 30, .1f, 15);
 
-	TArray<AActor*> IgnoredActors{ };
+	const TArray<AActor*> IgnoredActors{ };
 	UPoseSearchTrajectoryLibrary::HandleTrajectoryWorldCollisions(CachedCharacter.Get(), this,
 		OutTrajectory, true, .01f, Trajectory, CollisionResults,
-		TraceTypeQuery_MAX, false, 
-		IgnoredActors, EDrawDebugTrace::None, true, 150.f);
+		TraceTypeQuery_MAX, false, IgnoredActors, EDrawDebugTrace::None, true, 
+150.f);
 
-	UPoseSearchTrajectoryLibrary::GetTrajectoryVelocity(Trajectory, .4f, .5f, MotionMatching.PreviousVelocity, false);
-	UPoseSearchTrajectoryLibrary::GetTrajectoryVelocity(Trajectory, .4f, .5f, MotionMatching.Velocity, false);
 	UPoseSearchTrajectoryLibrary::GetTrajectoryVelocity(Trajectory, .4f, .5f, MotionMatching.FutureVelocity, false);
 }
 
@@ -222,8 +220,8 @@ bool UB_AnimInstance::ShouldTurnInPlace() const
 
 bool UB_AnimInstance::ShouldSpin() const
 {
-	FVector ActorForward = CharacterInfo.ActorTransform.GetRotation().GetForwardVector();
-	FVector RootForward = CharacterInfo.RootTransform.GetRotation().GetForwardVector();
+	const FVector ActorForward = CharacterInfo.ActorTransform.GetRotation().GetForwardVector();
+	const FVector RootForward = CharacterInfo.RootTransform.GetRotation().GetForwardVector();
 
 	float AngleDegrees = FMath::RadiansToDegrees(FMath::Acos(FVector::DotProduct(ActorForward,
 		RootForward)));

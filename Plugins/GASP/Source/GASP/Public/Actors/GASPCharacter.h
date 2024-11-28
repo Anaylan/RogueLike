@@ -4,16 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "AbilitySystemInterface.h"
-#include "Core/Types/EnumTypes.h"
-#include "Core/Types/StructTypes.h"
+#include "Types/EnumTypes.h"
+#include "Types/StructTypes.h"
 #include "B_Character.generated.h"
-
 
 class UB_CharacterMovementComponent;
 
 UCLASS(Abstract)
-class PROTOTYPE_API AB_Character : public ACharacter, public IAbilitySystemInterface
+class GASP_API AB_Character : public ACharacter
 {
 	GENERATED_BODY()
 

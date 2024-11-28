@@ -1,14 +1,14 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Actors/Characters/B_Character.h"
+#include "Actors/GASPCharacter.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
 #include "Components/Movement/B_CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 
 // Sets default values
-AB_Character::AB_Character(const FObjectInitializer& ObjectInitializer)
+AGASPCharacter::AGASPCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UB_CharacterMovementComponent>(CharacterMovementComponentName))
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -24,13 +24,13 @@ AB_Character::AB_Character(const FObjectInitializer& ObjectInitializer)
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 }
 
-UAbilitySystemComponent* AB_Character::GetAbilitySystemComponent() const
+UAbilitySystemComponent* AGASPCharacter::GetAbilitySystemComponent() const
 {
 	return AbilitySystemComponent;
 }
 
 // Called when the game starts or when spawned
-void AB_Character::BeginPlay()
+void AGASPCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -39,7 +39,7 @@ void AB_Character::BeginPlay()
 }
 
 // Called every frame
-void AB_Character::Tick(float DeltaTime)
+void AGASPCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -48,7 +48,7 @@ void AB_Character::Tick(float DeltaTime)
 		: EMovementState::Idle);
 }
 
-void AB_Character::AddStartupGameplayAbilities()
+void AGASPCharacter::AddStartupGameplayAbilities()
 {
 	check(AbilitySystemComponent);
 
@@ -80,14 +80,14 @@ void AB_Character::AddStartupGameplayAbilities()
 	}
 }
 
-void AB_Character::PostInitializeComponents()
+void AGASPCharacter::PostInitializeComponents()
 {
 	Super::PostInitializeComponents();
 
 	SetReplicateMovement(true);
 }
 
-void AB_Character::PossessedBy(AController* NewController)
+void AGASPCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 	// Server GAS init
@@ -98,7 +98,7 @@ void AB_Character::PossessedBy(AController* NewController)
 	}
 }
 
-void AB_Character::OnRep_PlayerState()
+void AGASPCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
@@ -118,7 +118,7 @@ void AB_Character::OnRep_PlayerState()
 	}
 }
 
-void AB_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+void AGASPCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
@@ -128,7 +128,7 @@ void AB_Character::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLife
 	DOREPLIFETIME(ThisClass, MovementState);
 }
 
-void AB_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PrevCustomMode)
+void AGASPCharacter::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 PrevCustomMode)
 {
 	Super::OnMovementModeChanged(PrevMovementMode, PrevCustomMode);
 
@@ -142,7 +142,7 @@ void AB_Character::OnMovementModeChanged(EMovementMode PrevMovementMode, uint8 P
 	}
 }
 
-void AB_Character::SetGait(EGait NewGait, bool bForce)
+void AGASPCharacter::SetGait(EGait NewGait, bool bForce)
 {
 	if (NewGait != Gait || bForce)
 	{
@@ -156,7 +156,7 @@ void AB_Character::SetGait(EGait NewGait, bool bForce)
 	}
 }
 
-void AB_Character::SetOverlayState(EOverlayState NewOverlayState, bool bForce)
+void AGASPCharacter::SetOverlayState(EOverlayState NewOverlayState, bool bForce)
 {
 	if (NewOverlayState != OverlayState || bForce)
 	{
@@ -169,12 +169,12 @@ void AB_Character::SetOverlayState(EOverlayState NewOverlayState, bool bForce)
 	}
 }
 
-void AB_Character::Server_SetOverlayState_Implementation(EOverlayState NewOverlayState)
+void AGASPCharacter::Server_SetOverlayState_Implementation(EOverlayState NewOverlayState)
 {
 	OverlayState = NewOverlayState;
 }
 
-void AB_Character::SetRotationMode(ERotationMode NewRotationMode, bool bForce)
+void AGASPCharacter::SetRotationMode(ERotationMode NewRotationMode, bool bForce)
 {
 	if (NewRotationMode != RotationMode || bForce)
 	{
@@ -188,7 +188,7 @@ void AB_Character::SetRotationMode(ERotationMode NewRotationMode, bool bForce)
 	}
 }
 
-void AB_Character::SetMovementMode(ECMovementMode NewMovementMode, bool bForce)
+void AGASPCharacter::SetMovementMode(ECMovementMode NewMovementMode, bool bForce)
 {
 	if (NewMovementMode != MovementMode || bForce)
 	{
@@ -201,22 +201,22 @@ void AB_Character::SetMovementMode(ECMovementMode NewMovementMode, bool bForce)
 	}
 }
 
-void AB_Character::Server_SetMovementMode_Implementation(ECMovementMode NewMovementMode)
+void AGASPCharacter::Server_SetMovementMode_Implementation(ECMovementMode NewMovementMode)
 {
 	MovementMode = NewMovementMode;
 }
 
-void AB_Character::Server_SetRotationMode_Implementation(ERotationMode NewRotationMode)
+void AGASPCharacter::Server_SetRotationMode_Implementation(ERotationMode NewRotationMode)
 {
 	RotationMode = NewRotationMode;
 }
 
-void AB_Character::Server_SetGait_Implementation(EGait NewGait)
+void AGASPCharacter::Server_SetGait_Implementation(EGait NewGait)
 {
 	Gait = NewGait;
 }
 
-void AB_Character::SetMovementState(EMovementState NewMovementState, bool bForce)
+void AGASPCharacter::SetMovementState(EMovementState NewMovementState, bool bForce)
 {
 	if (NewMovementState != MovementState || bForce)
 	{
@@ -229,12 +229,12 @@ void AB_Character::SetMovementState(EMovementState NewMovementState, bool bForce
 	}
 }
 
-void AB_Character::Server_SetMovementState_Implementation(EMovementState NewMovementState)
+void AGASPCharacter::Server_SetMovementState_Implementation(EMovementState NewMovementState)
 {
 	MovementState = NewMovementState;
 }
 
-void AB_Character::MoveAction(const FVector2D& Value)
+void AGASPCharacter::MoveAction(const FVector2D& Value)
 {
 	const FRotator Rotation = GetControlRotation();
 	const FRotator YawRotation = FRotator(0.f, Rotation.Yaw, 0.f);
@@ -246,13 +246,13 @@ void AB_Character::MoveAction(const FVector2D& Value)
 	AddMovementInput(RightDirectionDirection, Value.Y);
 }
 
-void AB_Character::LookAction(const FVector2D& Value)
+void AGASPCharacter::LookAction(const FVector2D& Value)
 {
 	AddControllerYawInput(Value.X);
 	AddControllerPitchInput(-1 * Value.Y);
 }
 
-void AB_Character::TryUseAbility(EAbilityInputID AbilityInputID)
+void AGASPCharacter::TryUseAbility(EAbilityInputID AbilityInputID)
 {	
 	if (!AbilitySystemComponent) return;
 	if (!GameplayAbilities.Contains(AbilityInputID) || 
@@ -260,7 +260,7 @@ void AB_Character::TryUseAbility(EAbilityInputID AbilityInputID)
 	AbilitySystemComponent->TryActivateAbilityByClass(GameplayAbilities[AbilityInputID]);
 }
 
-UB_CharacterMovementComponent* AB_Character::GetBCharacterMovement() const
+UB_CharacterMovementComponent* AGASPCharacter::GetBCharacterMovement() const
 {
 	return StaticCast<UB_CharacterMovementComponent*>(GetCharacterMovement());
 }
