@@ -4,19 +4,19 @@
 
 #include "CoreMinimal.h"
 #include "Abilities/GameplayAbility.h"
-#include "GameplayAbility_CharacterRotation.generated.h"
+#include "GameplayAbility_CharacterStrafe.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class PROTOTYPE_API UGameplayAbility_CharacterRotation : public UGameplayAbility
+class PROTOTYPE_API UGameplayAbility_CharacterStrafe : public UGameplayAbility
 {
 	GENERATED_BODY()
 
 
 public:
-	UGameplayAbility_CharacterRotation();
+	UGameplayAbility_CharacterStrafe();
 
 	virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
 		const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;

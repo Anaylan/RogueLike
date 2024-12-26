@@ -6,26 +6,9 @@
 #include "EnumTypes.generated.h"
 
 /**
- * Slots abilities
- */
-UENUM(BlueprintType)
-enum class EAbilityInputID : uint8 
-{
-	NONE,
-	Confirm UMETA(Hidden),
-	Cancel UMETA(Hidden),
-	IA_Jump UMETA(DisplayName = "Jump"),
-	IA_Sprint UMETA(DisplayName = "Sprint"),
-	IA_Walk UMETA(DisplayName = "Walk"),
-	IA_Rotation UMETA(DisplayName = "Rotation"),
-	IA_Equip UMETA(DisplayName = "Equip"),
-	IA_Attack UMETA(DisplayName = "Attack")
-};
-
-/**
  * Movement gait
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="EGait"))
 enum class EGait : uint8
 {
 	Walk,
@@ -36,7 +19,7 @@ enum class EGait : uint8
 /**
  * 
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="ERotationMode"))
 enum class ERotationMode : uint8
 {
 	OrientToMovement,
@@ -46,7 +29,7 @@ enum class ERotationMode : uint8
 /**
  *
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="ECMovementMode"))
 enum class ECMovementMode : uint8
 {
 	OnGround,
@@ -56,18 +39,30 @@ enum class ECMovementMode : uint8
 /**
  *
  */
-UENUM(BlueprintType)
+UENUM(BlueprintType, meta=(ScriptName="EMovementState"))
 enum class EMovementState : uint8
 {
 	Idle,
 	Moving
 };
 
-
-UENUM(BlueprintType)
-enum class EOverlayState : uint8
+/**
+ * Movement gait
+ */
+UENUM(BlueprintType, meta=(ScriptName="EStanceMode"))
+enum class EStanceMode : uint8
 {
-	Default,
-	Katana,
-	Sword
+	Stand,
+	Crouch
+};
+
+UENUM(BlueprintType, meta=(ScriptName="EMovementDirection"))
+enum class EMovementDirection : uint8
+{
+	F UMETA(DisplayName = "Forward"),
+	B UMETA(DisplayName = "Forward"),
+	LL UMETA(DisplayName = "Left"),
+	LR UMETA(DisplayName = "Left->Right"),
+	RL UMETA(DisplayName = "Right->Left"),
+	RR UMETA(DisplayName = "Right"),
 };

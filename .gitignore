@@ -53,6 +53,9 @@ Plugins/**/Binaries/*
 # Builds
 Build/*
 
+# Plugins
+Plugins/*
+
 # Whitelist PakBlacklist-<BuildConfiguration>.txt files
 !Build/*/
 Build/*/**
@@ -82,3 +85,15 @@ Content/**/*.uasset
 .vscode
 # VSCode History Files
 **/.history
+
+# VS config 
+.vsconfig
+
+
+Content/GrruzamSwordPack
+Content/__ExternalActors__
+Content/__ExternalObjects__
+Content/CloseCombatAnimSet
+Content/Developers
+Content/Collections
+Content/Characters

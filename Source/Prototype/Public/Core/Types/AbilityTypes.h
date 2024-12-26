@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
-#include "EnumTypes.generated.h"
+#include "AbilityTypes.generated.h"
 
 /**
  * Slots abilities
@@ -9,13 +9,16 @@
 UENUM(BlueprintType)
 enum class EAbilityInputID : uint8 
 {
-	NONE,
+	None  UMETA(Hidden),
 	Confirm UMETA(Hidden),
 	Cancel UMETA(Hidden),
-	IA_Jump UMETA(DisplayName = "Jump"),
-	IA_Sprint UMETA(DisplayName = "Sprint"),
-	IA_Walk UMETA(DisplayName = "Walk"),
-	IA_Rotation UMETA(DisplayName = "Rotation"),
-	IA_Equip UMETA(DisplayName = "Equip"),
-	IA_Attack UMETA(DisplayName = "Attack")
+	Jump UMETA(DisplayName = "Jump"),
+	Sprint UMETA(DisplayName = "Sprint"),
+	Walk UMETA(DisplayName = "Walk"),
+	Strafe UMETA(DisplayName = "Strafe"),
+	Equip UMETA(DisplayName = "Equip"),
+	Attack UMETA(DisplayName = "Attack"),
+	Crouch UMETA(DisplayName = "Crouch"),
+	LightAttack UMETA(DisplayNae = "LightAttack")
 };
+

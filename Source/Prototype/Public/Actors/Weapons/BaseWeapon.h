@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Core/Types/EnumTypes.h"
 #include "BaseWeapon.generated.h"
 
 UCLASS(Abstract)
@@ -24,12 +23,18 @@ protected:
 	TObjectPtr<class USkeletalMeshComponent> Mesh{};
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	EOverlayState OverlayState;
+	EOverlayState OverlayState{};
+	
 public:	
 
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE USkeletalMeshComponent* GetMesh() { return Mesh; };
+	
 	void AttachTo(AActor* NewOwner);
 	void Detach();
 
-	UFUNCTION(BlueprintCallable)
+	void Visible(bool NewVisible);
+	
+	UFUNCTION(BlueprintPure)
 	FORCEINLINE EOverlayState GetOverlayState() const { return OverlayState; };
 };

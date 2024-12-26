@@ -29,3 +29,8 @@ void ABaseWeapon::Detach()
 {
 	SetOwner(nullptr);
 }
+
+void ABaseWeapon::Visible(const bool NewVisible)
+{
+	Mesh->SetVisibility(NewVisible);
+}
