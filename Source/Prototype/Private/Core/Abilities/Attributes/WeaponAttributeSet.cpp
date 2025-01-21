@@ -22,8 +22,8 @@ void UAbilityAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>&
 	FDoRepLifetimeParams Params;
 	Params.bIsPushBased = true;
 
-	DOREPLIFETIME_WITH_PARAMS(ThisClass, MontageIndex, Params);
-	DOREPLIFETIME_WITH_PARAMS(ThisClass, PlayRate, Params);
+	DOREPLIFETIME_WITH_PARAMS(ThisClass, DamageMultiplier, Params);
+	DOREPLIFETIME_WITH_PARAMS(ThisClass, BaseDamage, Params);
 }
 
 void UAbilityAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute,
@@ -31,10 +31,12 @@ void UAbilityAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& A
 {
 }
 
-void UAbilityAttributeSet::OnRep_PlayRate(const FGameplayAttributeData& OldPlayRate)
+void UAbilityAttributeSet::OnRep_BaseDamage(const FGameplayAttributeData& OldBaseDamage)
 {
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, BaseDamage, OldBaseDamage);
 }
 
-void UAbilityAttributeSet::OnRep_MontageIndex(const FGameplayAttributeData& OldMontageIndex)
+void UAbilityAttributeSet::OnRep_DamageMultiplier(const FGameplayAttributeData& OldDamageMultiplier)
 {
+	GAMEPLAYATTRIBUTE_REPNOTIFY(ThisClass, DamageMultiplier, OldDamageMultiplier);
 }

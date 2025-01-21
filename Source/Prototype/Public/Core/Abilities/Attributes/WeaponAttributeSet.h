@@ -30,13 +30,13 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data", ReplicatedUsing = OnRep_MontageIndex)
-	FGameplayAttributeData MontageIndex{0};
-	ATTRIBUTE_ACCESSORS(UAbilityAttributeSet, MontageIndex)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data", ReplicatedUsing = OnRep_DamageMultiplier)
+	FGameplayAttributeData DamageMultiplier{0};
+	ATTRIBUTE_ACCESSORS(UAbilityAttributeSet, DamageMultiplier)
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data", ReplicatedUsing = OnRep_PlayRate)
-	FGameplayAttributeData PlayRate{1.f};
-	ATTRIBUTE_ACCESSORS(UAbilityAttributeSet, PlayRate)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Data", ReplicatedUsing = OnRep_BaseDamage)
+	FGameplayAttributeData BaseDamage{1.f};
+	ATTRIBUTE_ACCESSORS(UAbilityAttributeSet, BaseDamage)
 
 protected:
 	// Helper function to proportionally adjust the value of an attribute when it's associated max attribute changes.
@@ -48,8 +48,8 @@ protected:
 	**/
 
 	UFUNCTION()
-	virtual void OnRep_PlayRate(const FGameplayAttributeData& OldPlayRate);
+	virtual void OnRep_BaseDamage(const FGameplayAttributeData& OldBaseDamage);
 
 	UFUNCTION()
-	virtual void OnRep_MontageIndex(const FGameplayAttributeData& OldMontageIndex);
+	virtual void OnRep_DamageMultiplier(const FGameplayAttributeData& OldDamageMultiplier);
 };
