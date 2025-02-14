@@ -4,18 +4,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "E_PlayerController.generated.h"
+#include "RLPlayerController.generated.h"
 
 /**
  *
  */
 UCLASS()
-class ROGUELIKE_API AE_PlayerController : public APlayerController 
+class ROGUELIKE_API ARLPlayerController : public APlayerController 
 {
     GENERATED_BODY()
 
 public:
-    AE_PlayerController();
+    ARLPlayerController();
 
 protected:
     virtual void OnPossess(APawn* InPawn) override;

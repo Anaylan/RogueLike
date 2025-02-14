@@ -8,8 +8,7 @@ AEnemyCharacter::AEnemyCharacter(const FObjectInitializer& ObjectInitializer) : 
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	AbilitySystemComponent = CreateDefaultSubobject<UBaseAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent = CreateDefaultSubobject<URLAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Minimal);
 
 	AttributeSet = CreateDefaultSubobject<UPawnAttributeSet>(TEXT("AttributeSet"));
@@ -20,14 +19,14 @@ void AEnemyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	HealthChangedDelegateHandle =
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetHealthAttribute())
-		.AddUObject(this, &ThisClass::OnHealthChanged);
-	DamagedDelegateHandle =
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AttributeSet->GetReceivedDamageAttribute())
-		.AddUObject(this, &ThisClass::OnDamaged);
-
+	if (!IsValid(AbilitySystemComponent))
+		return;
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
+	
+	HealthChangedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		AttributeSet->GetHealthAttribute()).AddUObject(this, &ThisClass::OnHealthChanged);
+	DamagedDelegateHandle = AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(
+		AttributeSet->GetReceivedDamageAttribute()).AddUObject(this, &ThisClass::OnDamaged);	
 
 	GiveGameplayAbilities(GameplayAbilities);
 	GiveGameplayEffects(PassiveGameplayEffects);
@@ -35,8 +34,10 @@ void AEnemyCharacter::BeginPlay()
 
 void AEnemyCharacter::OnHealthChanged(const FOnAttributeChangeData& Data)
 {
+	UE_LOG(LogTemp, Display, TEXT("%s, %f"), *Data.Attribute.GetName(), Data.NewValue);
 	if (!IsAlive())
 	{
+		OnDeath();
 		UE_LOG(LogTemp, Display, TEXT("Character %s is died"), *GetFullName())
 	}
 }

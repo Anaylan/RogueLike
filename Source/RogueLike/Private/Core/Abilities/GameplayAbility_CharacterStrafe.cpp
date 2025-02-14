@@ -1,17 +1,16 @@
-
-
 #include "Core/Abilities/GameplayAbility_CharacterStrafe.h"
 #include "Actors/Characters/BaseCharacter.h"
 
 
 UGameplayAbility_CharacterStrafe::UGameplayAbility_CharacterStrafe()
 {
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
 
 void UGameplayAbility_CharacterStrafe::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                                       const FGameplayAbilityActivationInfo ActivationInfo,
+                                                       const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -45,10 +44,10 @@ void UGameplayAbility_CharacterStrafe::ActivateAbility(const FGameplayAbilitySpe
 }
 
 bool UGameplayAbility_CharacterStrafe::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	FGameplayTagContainer* OptionalRelevantTags) const
+                                                          const FGameplayAbilityActorInfo* ActorInfo,
+                                                          const FGameplayTagContainer* SourceTags,
+                                                          const FGameplayTagContainer* TargetTags,
+                                                          FGameplayTagContainer* OptionalRelevantTags) const
 {
 	const ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
 	return IsValid(Character) && Character->GetGait() != EGait::Sprint &&

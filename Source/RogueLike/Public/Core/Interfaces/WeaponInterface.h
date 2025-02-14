@@ -6,26 +6,29 @@
 #include "WeaponInterface.generated.h"
 
 class ABaseWeapon;
-enum class EWeaponSlot : uint8;
 /**
  *
  */
 UINTERFACE(MinimalAPI, Blueprintable)
-class UWeaponInterface : public UInterface {
-    GENERATED_BODY()
+class UWeaponInterface : public UInterface
+{
+	GENERATED_BODY()
 };
 
-class ROGUELIKE_API IWeaponInterface {
-    GENERATED_BODY()
+class ROGUELIKE_API IWeaponInterface
+{
+	GENERATED_BODY()
 
 public:
-    UFUNCTION(Blueprintable)
-    virtual bool HasWeapon(EWeaponSlot WeaponSlot) = 0;
-    UFUNCTION(Blueprintable)
-    virtual bool CanAttack() const = 0;
-    UFUNCTION(Blueprintable)
-    virtual bool CanEquipWeapon() const = 0;
+	/** Check if entity has any weapons */
+	UFUNCTION(Blueprintable, Category = "Weapon Interface")
+	virtual bool HasWeapons() = 0;
 
-    UFUNCTION(Blueprintable)
-    virtual ABaseWeapon* GetCurrentWeapon(EWeaponSlot WeaponHand) = 0;
+	UFUNCTION(Blueprintable, Category = "Weapon Interface")
+	virtual ABaseWeapon* GetWeaponInSlot(const struct FGameplayTag Slot) = 0;
+
+	UFUNCTION(Blueprintable, Category = "Weapon Interface")
+	virtual bool SwitchWeapon(const FGameplayTag& WeaponSlot, int32 Index) const = 0;
+	UFUNCTION(Blueprintable, Category = "Weapon Interface")
+	virtual int32 GetEquippedWeaponsSize() const = 0;
 };

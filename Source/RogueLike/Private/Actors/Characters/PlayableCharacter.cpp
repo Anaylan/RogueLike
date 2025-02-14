@@ -15,13 +15,17 @@ void APlayableCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
-	ABasePlayerState* BasePlayerState{ GetPlayerState<ABasePlayerState>() };
-	if (!ensure(BasePlayerState))
-		return;
+	ABasePlayerState* BasePlayerState{GetPlayerState<ABasePlayerState>()};
 
-	AbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(BasePlayerState->GetAbilitySystemComponent());
+	if (!ensure(BasePlayerState))
+	{
+		return;
+	}
+
+	AbilitySystemComponent = Cast<URLAbilitySystemComponent>(BasePlayerState->GetAbilitySystemComponent());
 	if (AbilitySystemComponent)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("AbilitySystemComponent is valid"))
 		AbilitySystemComponent->InitAbilityActorInfo(BasePlayerState, this);
 		AttributeSet = BasePlayerState->GetAttributeSet();
 		GiveGameplayAbilities(GameplayAbilities);
@@ -39,16 +43,30 @@ void APlayableCharacter::OnRep_PlayerState()
 {
 	Super::OnRep_PlayerState();
 
-	ABasePlayerState* BasePlayerState{ GetPlayerState<ABasePlayerState>() };
+	ABasePlayerState* BasePlayerState{GetPlayerState<ABasePlayerState>()};
 	if (!ensure(BasePlayerState))
+	{
 		return;
+	}
 
-	AbilitySystemComponent = Cast<UBaseAbilitySystemComponent>(BasePlayerState->GetAbilitySystemComponent());
+	AbilitySystemComponent = Cast<URLAbilitySystemComponent>(BasePlayerState->GetAbilitySystemComponent());
 	if (!AbilitySystemComponent)
+	{
 		return;
+	}
 
 	AbilitySystemComponent->InitAbilityActorInfo(BasePlayerState, this);
 	AttributeSet = BasePlayerState->GetAttributeSet();
 
 	GiveGameplayEffects(PassiveGameplayEffects);
+}
+
+void APlayableCharacter::OnRep_Controller()
+{
+	Super::OnRep_Controller();
+	
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
+    {
+    	GameplayCamera->ActivateCameraForPlayerController(PC);
+    }
 }

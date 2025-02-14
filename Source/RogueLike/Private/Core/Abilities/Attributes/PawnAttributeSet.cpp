@@ -62,9 +62,8 @@ void UPawnAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 
 		if (LocalDamageCause > 0.f)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Taken damage: %f"), LocalDamageCause)
-				// Apply the health change and then clamp it
-				const float OldHealth = GetHealth();
+			// Apply the health change and then clamp it
+			const float OldHealth = GetHealth();
 			SetHealth(FMath::Clamp(OldHealth - LocalDamageCause, 0.f, GetMaxHealth()));
 		}
 	}

@@ -48,7 +48,6 @@ SourceArt/**/*.tga
 
 # Binary Files
 Binaries/*
-Plugins/**/Binaries/*
 
 # Builds
 Build/*
@@ -72,14 +71,14 @@ Saved/*
 
 # Compiled source files for the engine to use
 Intermediate/*
-Plugins/**/Intermediate/*
+
 
 # Cache files for the editor to use
 DerivedDataCache/*
 
 .idea
 
-Content/**/*.uasset
+# Content/**/*.uasset
 
 # VSCode Cache Directory
 .vscode
@@ -89,11 +88,12 @@ Content/**/*.uasset
 # VS config 
 .vsconfig
 
-
-Content/GrruzamSwordPack
-Content/__ExternalActors__
-Content/__ExternalObjects__
-Content/CloseCombatAnimSet
-Content/Developers
-Content/Collections
-Content/Characters
+Content/__ExternalActors__/**/*.uasset
+Content/__ExternalObjects__/**/*.uasset
+Content/CloseCombatAnimSet/**/*.uasset
+Content/Overlays/**/*.uasset
+Content/ShooterSeriesAssets/**/*.uasset
+Content/Weapons/**/*.uasset
+Content/Developers/**/*.uasset
+Content/Collections/**/*.uasset
+Content/Characters/**/*.uasset

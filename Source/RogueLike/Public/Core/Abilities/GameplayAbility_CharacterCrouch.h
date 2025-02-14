@@ -14,7 +14,7 @@ class ROGUELIKE_API UGameplayAbility_CharacterCrouch : public UGameplayAbility {
     GENERATED_BODY()
 
 public:
-    UGameplayAbility_CharacterCrouch() = default;
+    UGameplayAbility_CharacterCrouch();
 
     virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData) override;

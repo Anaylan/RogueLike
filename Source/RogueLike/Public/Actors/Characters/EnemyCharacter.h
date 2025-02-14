@@ -34,6 +34,9 @@ protected:
 
     virtual void OnHealthChanged(const FOnAttributeChangeData& Data) override;
 
+    UFUNCTION(BlueprintImplementableEvent)
+    void OnDeath();
+
     FDelegateHandle HealthChangedDelegateHandle;
     FDelegateHandle DamagedDelegateHandle;
 };

@@ -14,18 +14,3 @@ ABaseWeapon::ABaseWeapon()
 
 	Attributes = CreateDefaultSubobject<UWeaponAttributeSet>(TEXT("Attributes"));
 }
-
-void ABaseWeapon::SetVisibility(const bool NewVisible) const
-{
-	MeshComponent->SetVisibility(NewVisible);
-}
-
-FVector ABaseWeapon::GetStartPoint()
-{
-	return MeshComponent->GetSocketLocation(StartSocket);
-}
-
-FVector ABaseWeapon::GetEndPoint()
-{
-	return MeshComponent->GetSocketLocation(EndSocket);
-}

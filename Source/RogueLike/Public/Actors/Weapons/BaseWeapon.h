@@ -7,84 +7,78 @@
 #include "GameFramework/Actor.h"
 #include "Core/Types/PawnTypes.h"
 #include "Types/EnumTypes.h"
+#include "Types/GameplayTags.h"
 #include "BaseWeapon.generated.h"
 
+
 UCLASS(Abstract)
-class ROGUELIKE_API ABaseWeapon : public AActor {
-    GENERATED_BODY()
+class ROGUELIKE_API ABaseWeapon : public AActor
+{
+	GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
-    FName EndSocket{};
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
-    FName StartSocket{};
-
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
-    FName AttachSocket{};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess))
+	FName AttachSocket{};
 
 public:
-    // Sets default values for this actor's properties
-    ABaseWeapon();
+	// Sets default values for this actor's properties
+	ABaseWeapon();
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    TObjectPtr<class USkeletalMeshComponent> MeshComponent {};
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<class USkeletalMeshComponent> MeshComponent{};
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    EOverlayState OverlayState { EOverlayState::Default };
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag OverlayMode{OverlayModeTags::Default};
 
-    UPROPERTY()
-    TObjectPtr<UWeaponAttributeSet> Attributes;
+	UPROPERTY()
+	TObjectPtr<UWeaponAttributeSet> Attributes;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    TArray<TSubclassOf<UGameplayEffect>> GameplayEffects;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TArray<TSubclassOf<UGameplayEffect>> GameplayEffects;
 
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    EWeaponType WeaponType { EWeaponType::OneHanded };
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	EWeaponType WeaponType{EWeaponType::OneHanded};
 
 public:
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE USkeletalMeshComponent* GetMesh()
-    {
-        return MeshComponent;
-    };
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE USkeletalMeshComponent* GetMesh()
+	{
+		return MeshComponent;
+	}
 
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE EWeaponType GetWeaponType()
-    {
-        return WeaponType;
-    };
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE EWeaponType GetWeaponType() const
+	{
+		return WeaponType;
+	}
 
-    void SetVisibility(bool NewVisible) const;
+	UFUNCTION(BlueprintPure)
+	FORCEINLINE FGameplayTag GetOverlayMode() const
+	{
+		return OverlayMode;
+	}
 
-    UFUNCTION(BlueprintPure)
-    FORCEINLINE EOverlayState GetOverlayState() const
-    {
-        return OverlayState;
-    };
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE float GetBaseDamage() const
+	{
+		return Attributes->GetBaseDamage();
+	}
 
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE float GetBaseDamage() const
-    {
-        return Attributes->GetBaseDamage();
-    }
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE float GetDamageMultiplier() const
-    {
-        return Attributes->GetDamageMultiplier();
-    }
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE TArray<TSubclassOf<UGameplayEffect>> GetGameplayEffects()
-    {
-        return GameplayEffects;
-    }
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE float GetDamageMultiplier() const
+	{
+		return Attributes->GetDamageMultiplier();
+	}
 
-    UFUNCTION(BlueprintGetter)
-    FORCEINLINE FName GetAttachSocket()
-    {
-        return AttachSocket;
-    }
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE TArray<TSubclassOf<UGameplayEffect>> GetGameplayEffects()
+	{
+		return GameplayEffects;
+	}
 
-    virtual FVector GetStartPoint();
-    virtual FVector GetEndPoint();
+	UFUNCTION(BlueprintGetter)
+	FORCEINLINE FName GetAttachSocket() const
+	{
+		return AttachSocket;
+	}
 };

@@ -4,10 +4,15 @@
 #include "Actors/Characters/BaseCharacter.h"
 #include "Types/StructTypes.h"
 
+UGameplayAbility_CharacterWalk::UGameplayAbility_CharacterWalk()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
 void UGameplayAbility_CharacterWalk::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                                     const FGameplayAbilityActorInfo* ActorInfo,
+                                                     const FGameplayAbilityActivationInfo ActivationInfo,
+                                                     const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -20,37 +25,35 @@ void UGameplayAbility_CharacterWalk::ActivateAbility(const FGameplayAbilitySpecH
 		}
 
 		ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
-
-		if (!IsValid(Character) || Character->GetGait() == EGait::Walk)
+		if (!IsValid(Character))
 		{
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 			return;
 		}
-		Character->SetGait(EGait::Walk);
+
+		switch (Character->GetGait())
+		{
+		case EGait::Run:
+			Character->SetDesiredGait(EGait::Walk);
+			break;
+		case EGait::Walk:
+			Character->SetDesiredGait(EGait::Run);
+			break;
+		default:
+			Character->SetDesiredGait(EGait::Run);
+			break;
+		}
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
 	}
 }
 
 bool UGameplayAbility_CharacterWalk::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	OUT FGameplayTagContainer* OptionalRelevantTags) const
+                                                        const FGameplayAbilityActorInfo* ActorInfo,
+                                                        const FGameplayTagContainer* SourceTags,
+                                                        const FGameplayTagContainer* TargetTags,
+                                                        OUT FGameplayTagContainer* OptionalRelevantTags) const
 {
 	ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
 	return IsValid(Character) && Character->GetGait() != EGait::Sprint &&
 		Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags);
-}
-
-void UGameplayAbility_CharacterWalk::EndAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateEndAbility, bool bWasCancelled)
-{
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
-
-	ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
-
-	if (!IsValid(Character))
-		return;
-	Character->SetGait(EGait::Run);
 }

@@ -15,7 +15,7 @@ class ROGUELIKE_API UGameplayAbility_EquipWeapon : public UGameplayAbility {
     GENERATED_BODY()
 
 public:
-    UGameplayAbility_EquipWeapon() = default;
+    UGameplayAbility_EquipWeapon();
 
     virtual void ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo,
         const FGameplayAbilityActivationInfo ActivationInfo,

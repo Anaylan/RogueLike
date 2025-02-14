@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "AbilitySystemInterface.h"
-#include "Components/BaseAbilitySystemComponent.h"
+#include "Components/RLAbilitySystemComponent.h"
 #include "GameFramework/PlayerState.h"
 #include "BasePlayerState.generated.h"
 
@@ -12,38 +12,39 @@
  *
  */
 UCLASS()
-class ROGUELIKE_API ABasePlayerState : public APlayerState, public IAbilitySystemInterface {
-    GENERATED_BODY()
+class ROGUELIKE_API ABasePlayerState : public APlayerState, public IAbilitySystemInterface
+{
+	GENERATED_BODY()
 
 protected:
-    UPROPERTY()
-    TObjectPtr<UBaseAbilitySystemComponent> AbilitySystemComponent;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<URLAbilitySystemComponent> AbilitySystemComponent{};
 
-    UPROPERTY()
-    TObjectPtr<class UPawnAttributeSet> AttributeSet;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<class UPawnAttributeSet> AttributeSet{};
 
 public:
-    ABasePlayerState();
+	ABasePlayerState();
 
-    FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override
-    {
-        return AbilitySystemComponent;
-    };
+	FORCEINLINE virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override
+	{
+		return AbilitySystemComponent;
+	};
 
-    FORCEINLINE UPawnAttributeSet* GetAttributeSet()
-    {
-        return AttributeSet;
-    }
+	FORCEINLINE UPawnAttributeSet* GetAttributeSet()
+	{
+		return AttributeSet;
+	}
 
-    UFUNCTION(BlueprintGetter)
-    float GetHealth() const;
-    UFUNCTION(BlueprintGetter)
-    float GetMaxHealth() const;
-    UFUNCTION(BlueprintGetter)
-    float GetReceivedDamage() const;
-    UFUNCTION(BlueprintGetter)
-    float GetStrength() const;
+	UFUNCTION(BlueprintGetter)
+	float GetHealth() const;
+	UFUNCTION(BlueprintGetter)
+	float GetMaxHealth() const;
+	UFUNCTION(BlueprintGetter)
+	float GetReceivedDamage() const;
+	UFUNCTION(BlueprintGetter)
+	float GetStrength() const;
 
-    UFUNCTION(BlueprintPure)
-    bool IsAlive() const;
+	UFUNCTION(BlueprintPure)
+	bool IsAlive() const;
 };

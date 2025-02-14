@@ -10,7 +10,7 @@ void UWeaponAttributeSet::PreAttributeChange(const FGameplayAttribute& Attribute
 
 	if (Attribute == GetDamageMultiplierAttribute())
 	{
-		NewValue = FMath::Clamp(NewValue, .0f, MAX_flt);
+		NewValue = FMath::Max(NewValue, .0f);
 	}
 }
 
@@ -18,7 +18,7 @@ void UWeaponAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCall
 {
 	Super::PostGameplayEffectExecute(Data);
 
-	const FGameplayAttribute& ModifiedAttribute{ Data.EvaluatedData.Attribute };
+	const FGameplayAttribute& ModifiedAttribute{Data.EvaluatedData.Attribute};
 
 	if (ModifiedAttribute == GetDamageMultiplierAttribute())
 	{
@@ -44,8 +44,8 @@ void UWeaponAttributeSet::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 }
 
 void UWeaponAttributeSet::AdjustAttributeForMaxChange(FGameplayAttributeData& AffectedAttribute,
-	const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
-	const FGameplayAttribute& AffectedAttributeProperty)
+                                                      const FGameplayAttributeData& MaxAttribute, float NewMaxValue,
+                                                      const FGameplayAttribute& AffectedAttributeProperty)
 {
 	UAbilitySystemComponent* AbilityComp = GetOwningAbilitySystemComponent();
 	const float CurrentMaxValue = MaxAttribute.GetCurrentValue();

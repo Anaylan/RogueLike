@@ -1,206 +1,201 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "Actors/Characters/BaseCharacter.h"
-#include "Actors/Weapons/BaseWeapon.h"
 #include "Net/UnrealNetwork.h"
 #include "AbilitySystemComponent.h"
 #include "Abilities/GameplayAbility.h"
-#include "Core/Abilities/Attributes/PawnAttributeSet.h"
+#include "Components/WeaponComponent.h"
 
 ABaseCharacter::ABaseCharacter(const FObjectInitializer& ObjectInitializer)
-    : Super(ObjectInitializer)
+	: Super(ObjectInitializer)
 {
-    bReplicates = true;
+	bReplicates = true;
 
-    CurrentWeapon = CreateDefaultSubobject<ABaseWeapon>("WeaponComponent");
+
+	WeaponComponent = CreateDefaultSubobject<UWeaponComponent>(TEXT("WeaponComponent"));
 }
 
-void ABaseCharacter::OnRep_CurrentWeapon(ABaseWeapon* OldCurrentWeapon)
-{
-    if (CurrentWeapon) {
-        USkeletalMeshComponent* MeshComponent { GetMesh() };
-        const FName AttachSocket = CurrentWeapon->GetAttachSocket();
-        CurrentWeapon->SetActorTransform(MeshComponent->GetSocketTransform(AttachSocket), false, nullptr,
-            ETeleportType::TeleportPhysics);
-
-        CurrentWeapon->AttachToComponent(MeshComponent, FAttachmentTransformRules::SnapToTargetIncludingScale,
-            AttachSocket);
-        CurrentWeapon->SetOwner(this);
-        if (OverlayState != CurrentWeapon->GetOverlayState()) {
-            SetOverlayState(CurrentWeapon->GetOverlayState());
-        }
-        GiveGameplayEffects(CurrentWeapon->GetGameplayEffects());
-    } else {
-        CurrentWeapon->DetachFromActor(FDetachmentTransformRules::KeepWorldTransform);
-        CurrentWeapon->SetOwner(nullptr);
-        CurrentWeapon->SetVisibility(false);
-        CurrentWeapon = nullptr;
-
-        SetOverlayState(EOverlayState::Default);
-    }
-
-    if (OldCurrentWeapon) {
-        RemoveGameplayEffects(OldCurrentWeapon->GetGameplayEffects());
-        OldCurrentWeapon->SetOwner(nullptr);
-        OldCurrentWeapon = nullptr;
-    }
-}
-
-void ABaseCharacter::SpawnWeapons()
-{
-    if (HasAuthority()) {
-        for (auto& WeaponClass : Weapons) {
-            if (!IsValid(WeaponClass))
-                continue;
-
-            FActorSpawnParameters Params;
-            Params.Owner = this;
-
-            ABaseWeapon* SpawnedWeapon = GetWorld()->SpawnActor<ABaseWeapon>(WeaponClass, Params);
-            const int32 Index = SpawnedWeapons.Add(SpawnedWeapon);
-            SpawnedWeapon->SetOwner(this);
-
-            if (Index == RightWeaponIndex) {
-                CurrentWeapon = SpawnedWeapon;
-                OnRep_CurrentWeapon(nullptr);
-            }
-        }
-    }
-}
 
 void ABaseCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-    FDoRepLifetimeParams Params;
-    Params.bIsPushBased = true;
-    Params.Condition = COND_SkipOwner;
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+	Params.Condition = COND_None;
 
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, SpawnedWeapons, Params);
-    DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, CurrentWeapon, Params);
+	DOREPLIFETIME_WITH_PARAMS_FAST(ThisClass, WeaponComponent, Params)
 }
 
 void ABaseCharacter::GiveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& GameplayEffects) const
 {
-    if (!ensure(AbilitySystemComponent)) {
-        return;
-    }
+	if (!ensure(AbilitySystemComponent))
+	{
+		return;
+	}
 
-    for (const auto& GameplayEffect : GameplayEffects) {
-        if (!GameplayEffect)
-            continue;
+	for (const auto& GameplayEffect : GameplayEffects)
+	{
+		if (!GameplayEffect)
+		{
+			continue;
+		}
 
-        FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
-        EffectContext.AddSourceObject(this);
+		FGameplayEffectContextHandle EffectContext = AbilitySystemComponent->MakeEffectContext();
+		EffectContext.AddSourceObject(this);
 
-        FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->MakeOutgoingSpec(GameplayEffect, 1, EffectContext);
-        if (NewHandle.IsValid()) {
-            AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
-        }
-    }
+		FGameplayEffectSpecHandle NewHandle = AbilitySystemComponent->
+			MakeOutgoingSpec(GameplayEffect, 1, EffectContext);
+		if (NewHandle.IsValid())
+		{
+			AbilitySystemComponent->ApplyGameplayEffectSpecToSelf(*NewHandle.Data.Get());
+		}
+	}
 }
 
 void ABaseCharacter::RemoveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& EffectsToRemove) const
 {
-    if (!ensure(AbilitySystemComponent)) {
-        return;
-    }
+	if (!ensure(AbilitySystemComponent))
+	{
+		return;
+	}
 
-    for (const auto& EffectToRemove : EffectsToRemove) {
-        if (!EffectToRemove)
-            continue;
+	for (const auto& EffectToRemove : EffectsToRemove)
+	{
+		if (!EffectToRemove)
+		{
+			continue;
+		}
 
-        FGameplayEffectQuery Query;
-        Query.EffectDefinition = EffectToRemove;
 
-        AbilitySystemComponent->RemoveActiveEffects(Query, -1);
-    }
+		FGameplayEffectQuery Query;
+		Query.EffectDefinition = EffectToRemove;
+		// Query.CustomMatchDelegate.BindLambda([&](const FActiveGameplayEffect& CurEffect)
+		// {
+		// 	return CurEffect.Spec.Def->GetClass() == EffectToRemove;
+		// });
+		AbilitySystemComponent->RemoveActiveEffects(Query, -1);
+	}
 }
 
-bool ABaseCharacter::HasWeapon(EWeaponSlot WeaponSlot)
-{
-    if (WeaponSlot == EWeaponSlot::None)
-        return false;
-
-    return IsValid(CurrentWeapon);
-}
 
 void ABaseCharacter::BeginPlay()
 {
-    Super::BeginPlay();
-
-    SpawnWeapons();
+	Super::BeginPlay();
 }
 
 void ABaseCharacter::Tick(float DeltaSeconds)
 {
-    Super::Tick(DeltaSeconds);
+	Super::Tick(DeltaSeconds);
 }
 
 void ABaseCharacter::GiveGameplayAbilities(TMap<EAbilityInputID, TSubclassOf<UGameplayAbility>> AbilitiesToGive)
 {
-    if (!ensure(AbilitySystemComponent)) {
-        return;
-    }
+	if (!ensure(AbilitySystemComponent))
+	{
+		return;
+	}
 
-    if (HasAuthority() && !bAbilitiesInitialized) {
-        // Grant abilities, but only on the server
-        for (auto& GameplayAbility : AbilitiesToGive) {
-            if (!GameplayAbility.Value)
-                continue;
+	if (HasAuthority() && !bAbilitiesInitialized)
+	{
+		// Grant abilities, but only on the server
+		for (auto& GameplayAbility : AbilitiesToGive)
+		{
+			if (!GameplayAbility.Value)
+			{
+				continue;
+			}
 
-            FGameplayAbilitySpec AbilitySpec(GameplayAbility.Value, 1, StaticCast<int32>(GameplayAbility.Key), this);
+			FGameplayAbilitySpec AbilitySpec(GameplayAbility.Value, 1, static_cast<int32>(GameplayAbility.Key), this);
 
-            AbilitySystemComponent->GiveAbility(AbilitySpec);
-        }
+			AbilitySystemComponent->GiveAbility(AbilitySpec);
+		}
 
-        bAbilitiesInitialized = true;
-    }
+		bAbilitiesInitialized = true;
+	}
 }
 
-void ABaseCharacter::RemoveGameplayAbility(const UGameplayAbility* AbilityToRemove)
+void ABaseCharacter::RemoveGameplayAbility(const UGameplayAbility* AbilityToRemove) const
 {
-    if (!ensure(AbilitySystemComponent) || !IsValid(AbilityToRemove)) {
-        return;
-    }
+	if (!ensure(AbilitySystemComponent) || !IsValid(AbilityToRemove))
+	{
+		return;
+	}
 
-    FGameplayAbilitySpecHandle AbilityToRemoveSpecHandle(AbilityToRemove->GetCurrentAbilitySpecHandle());
+	const FGameplayAbilitySpecHandle AbilityToRemoveSpecHandle(AbilityToRemove->GetCurrentAbilitySpecHandle());
 
-    AbilitySystemComponent->ClearAbility(AbilityToRemoveSpecHandle);
+	AbilitySystemComponent->ClearAbility(AbilityToRemoveSpecHandle);
 }
 
-bool ABaseCharacter::CanAttack() const
-{
-    if (!IsValid(AbilitySystemComponent))
-        return false;
 
-    return true;
+void ABaseCharacter::TryUseAbility(const EAbilityInputID AbilityInputID, const bool bPressed)
+{
+	if (!ensure(AbilitySystemComponent))
+	{
+		return;
+	}
+	if (!GameplayAbilities.Contains(AbilityInputID) ||
+		!GetMutableDefault<UGameplayAbility>(GameplayAbilities[AbilityInputID]))
+	{
+		return;
+	}
+
+	const TSubclassOf<UGameplayAbility> AbilityClass = GameplayAbilities[AbilityInputID];
+
+	const FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass);
+	if (!Spec)
+	{
+		return;
+	}
+
+	if (bPressed)
+	{
+		AbilitySystemComponent->AbilityLocalInputPressed(Spec->InputID);
+	}
+	else
+	{
+		AbilitySystemComponent->AbilityLocalInputReleased(Spec->InputID);
+	}
 }
 
-bool ABaseCharacter::CanEquipWeapon() const
+void ABaseCharacter::Jump()
 {
-    if (SpawnedWeapons[LeftWeaponIndex]->GetWeaponType() == EWeaponType::TwoHanded || SpawnedWeapons[RightWeaponIndex]->GetWeaponType() == EWeaponType::TwoHanded)
-        return false;
+	Super::Jump();
 
-    return true;
+	// StopAnimMontage();
 }
 
-void ABaseCharacter::TryUseAbility(EAbilityInputID AbilityInputID, bool bPressed)
+bool ABaseCharacter::HasWeapons()
 {
-    if (!ensure(AbilitySystemComponent))
-        return;
-    if (!GameplayAbilities.Contains(AbilityInputID) || !IsValid(GameplayAbilities[AbilityInputID].GetDefaultObject()))
-        return;
+	return true;
+}
 
-    TSubclassOf<UGameplayAbility> AbilityClass = GameplayAbilities[AbilityInputID];
+bool ABaseCharacter::SwitchWeapon(const FGameplayTag& WeaponSlot, const int32 Index)
+const
+{
+	if (IsValid(WeaponComponent))
+	{
+		UE_LOG(LogTemp, Display, TEXT("WeaponSlot: %s"), *WeaponSlot.ToString())
+		return WeaponComponent->RequestWeaponSwitch(WeaponSlot, Index);
+	}
+	return false;
+}
 
-    FGameplayAbilitySpec* Spec = AbilitySystemComponent->FindAbilitySpecFromClass(AbilityClass);
-    if (!ensure(Spec))
-        return;
+int32 ABaseCharacter::GetEquippedWeaponsSize() const
+{
+	if (IsValid(WeaponComponent))
+	{
+		UE_LOG(LogTemp, Display, TEXT("GetEquippedWeaponsSize = %i"), WeaponComponent->GetEquippedWeapons().Num())
+		return WeaponComponent->GetEquippedWeapons().Num();
+	}
+	return INDEX_NONE;
+}
 
-    if (bPressed) {
-        AbilitySystemComponent->AbilityLocalInputPressed(Spec->InputID);
-    } else {
-        AbilitySystemComponent->AbilityLocalInputReleased(Spec->InputID);
-    }
+ABaseWeapon* ABaseCharacter::GetWeaponInSlot(const FGameplayTag Slot)
+{
+	if (IsValid(WeaponComponent))
+	{
+		return WeaponComponent->GetWeaponInSlot(Slot);
+	}
+	return nullptr;
 }

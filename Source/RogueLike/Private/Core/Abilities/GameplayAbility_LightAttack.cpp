@@ -3,126 +3,145 @@
 #include "Core/Abilities/GameplayAbility_LightAttack.h"
 #include "AbilitySystemComponent.h"
 #include "Actors/Characters/BaseCharacter.h"
-#include "Actors/Weapons/BaseWeapon.h"
-#include "Actors/Projectiles/BaseProjectile.h"
+#include "Abilities/Tasks/AbilityTask_WaitInputPress.h"
+#include "Actors/Characters/EnemyCharacter.h"
 #include "Core/Abilities/Tasks/AbilityTask_PlayMontageAndWaitEvent.h"
+#include "Core/DataAsset/AbilityAnimSetDataAsset.h"
+#include "Core/Helpers/MotionWarpingHelper.h"
+#include "RogueLike/Public/Core/Helpers/AbilityHelper.h"
+
+UGameplayAbility_LightAttack::UGameplayAbility_LightAttack()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
 
 void UGameplayAbility_LightAttack::OnCompleted(FGameplayTag EventTag, FGameplayEventData EventData)
 {
+	// MontageIndex = 0;
 	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, false);
 }
 
 void UGameplayAbility_LightAttack::OnCancelled(FGameplayTag EventTag, FGameplayEventData EventData)
 {
-	EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
+	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+}
+
+void UGameplayAbility_LightAttack::OnPressed(float TimeWaited)
+{
+	if (!CurrentActorInfo || !CurrentActorInfo->AbilitySystemComponent.IsValid())
+	{
+		return;
+	}
+
+	// Soft cancel current ability and attempt reactivation
+	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+	CurrentActorInfo->AbilitySystemComponent->TryActivateAbility(CurrentSpecHandle, false);
 }
 
 void UGameplayAbility_LightAttack::OnEventReceived_Implementation(FGameplayTag EventTag, FGameplayEventData EventData)
 {
-	// if (EventTag == FGameplayTag::RequestGameplayTag(FName("Event.Hit")))
-	// {
-	// 	ApplyGameplayEffectToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EventData.TargetData,
-	// 		DamageGameplayEffect, 1);
-	// }
-
-	if (EventTag == BlockedAbilityTag)
+	if (EventTag == HitTag)
 	{
-		SetCanBeCanceled(true);
+		UE_LOG(LogTemp, Warning, TEXT("Tag received"))
+		TArray<FActiveGameplayEffectHandle> DamageEffectSpecHandle = ApplyGameplayEffectToTarget(
+			CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EventData.TargetData,
+			DamageGameplayEffect, GetAbilityLevel());
+
+		TArray<FActiveGameplayEffectHandle> StunEffectSpecHandle = ApplyGameplayEffectToTarget(
+			CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, EventData.TargetData,
+			ExtraGameplayEffect, GetAbilityLevel());
 	}
 
-	if (GetOwningActorFromActorInfo()->GetLocalRole() == ROLE_Authority && EventTag == FGameplayTag::RequestGameplayTag(FName("Event.Montage.SpawnProjectile")))
+	if (EventTag == QueuedOpenTag)
 	{
-		ABaseCharacter* Character = Cast<ABaseCharacter>(GetAvatarActorFromActorInfo());
-		if (!Character)
-		{
-			EndAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true, true);
-		}
+		UE_LOG(LogTemp, Warning, TEXT("Queued tag received"))
+		auto InputTask =
+			UAbilityTask_WaitInputPress::WaitInputPress(this);
 
-		USkeletalMeshComponent* WeaponMesh = Character->GetCurrentWeapon()->GetMesh();
-		FVector Start = WeaponMesh->GetSocketLocation(MuzzleSocket);
-		FVector End = Character->GetActorLocation() + Character->GetActorForwardVector() * 100.f;
-		FRotator Rotation = FRotationMatrix::MakeFromX(Start - End).Rotator();
+		InputTask->OnPress.AddUniqueDynamic(this, &ThisClass::OnPressed);
+		InputTask->ReadyForActivation();
 
-		FGameplayEffectSpecHandle DamageEffectSpecHandle{ MakeOutgoingGameplayEffectSpec(DamageGameplayEffect, GetAbilityLevel())};
-
-		FTransform MuzzleTransform = WeaponMesh->GetSocketTransform(MuzzleSocket);
-		MuzzleTransform.SetRotation(Rotation.Quaternion());
-		MuzzleTransform.SetScale3D(FVector(1.0f));
-
-		FActorSpawnParameters SpawnParameters;
-		SpawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-		ABaseProjectile* Projectile = GetWorld()->SpawnActorDeferred<ABaseProjectile>(ProjectileClass, MuzzleTransform, GetOwningActorFromActorInfo(),
-			Character, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-		Projectile->DamageEffectSpecHandle = DamageEffectSpecHandle;
-		Projectile->Range = 10.f;
-		Projectile->FinishSpawning(MuzzleTransform);
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(TimerHandle,
+		                                       [this, WeakTask = TWeakObjectPtr(InputTask)
+		                                       ]()
+		                                       {
+			                                       if (WeakTask.IsValid())
+			                                       {
+				                                       WeakTask->EndTask();
+			                                       }
+		                                       },
+		                                       InputQueuedTime, false);
 	}
 }
 
 void UGameplayAbility_LightAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                                   const FGameplayAbilityActorInfo* ActorInfo,
+                                                   const FGameplayAbilityActivationInfo ActivationInfo,
+                                                   const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	if (HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
+	if (!HasAuthorityOrPredictionKey(ActorInfo, &ActivationInfo))
 	{
-		if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
-		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
-			return;
-		}
-
-		const ABaseCharacter* Character = CastChecked<ABaseCharacter>(GetAvatarActorFromActorInfo());
-		if (!IsValid(Character))
-		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-			return;
-		}
-
-		FGameplayAbilityMontage* AbilityMontage{ MontageMapping.Find(Character->GetOverlayState()) };
-		if (!AbilityMontage)
-		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-			return;
-		}
-
-		UAnimMontage* MontageToPlay{ AbilityMontage->Montages[0] };
-		if (!IsValid(MontageToPlay))
-		{
-			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-			return;
-		}
-
-		UAbilityTask_PlayMontageAndWaitEvent* Task =
-			UAbilityTask_PlayMontageAndWaitEvent::CreatePlayMontageAndWaitProxy(this, NAME_None, MontageToPlay,
-				FGameplayTagContainer());
-
-		Task->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnCancelled);
-		Task->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnCancelled);
-		Task->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnCompleted);
-		Task->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
-		Task->ReadyForActivation();
+		return;
 	}
-}
 
-bool UGameplayAbility_LightAttack::CanActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayTagContainer* SourceTags,
-	const FGameplayTagContainer* TargetTags,
-	FGameplayTagContainer* OptionalRelevantTags) const
-{
-	const ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
-	return Super::CanActivateAbility(Handle, ActorInfo, SourceTags, TargetTags, OptionalRelevantTags) &&
-		IsValid(Character);
-}
+	if (!CommitAbility(Handle, ActorInfo, ActivationInfo))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
 
-void UGameplayAbility_LightAttack::EndAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	bool bReplicateEndAbility, bool bWasCancelled)
-{
-	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
+	ABaseCharacter* Character = Cast<ABaseCharacter>(ActorInfo->AvatarActor.Get());
+
+	const auto DataAsset = Character->GetAbilitiesAnimAsset(
+		FAbilityHelper::GetTagByRootTag(GetAssetTags(), FGameplayTag::RequestGameplayTag("Abilities.Type")));
+	if (!IsValid(DataAsset))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	const FGameplayAbilityMontage& MontageData = DataAsset->FindMontage(Character->GetOverlayMode());
+	if (MontageData.Montages.IsEmpty())
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	int32 CurrentIndex = FPlatformAtomics::InterlockedIncrement(&MontageIndex - 1) % MontageData.Montages.Num();
+	UAnimMontage* MontageToPlay = FAbilityHelper::GetAbilityMontage(MontageData, CurrentIndex);
+
+
+	GetWorld()->GetTimerManager().SetTimer(MontageTimerHandle,
+	                                       [this, &CurrentIndex]()
+	                                       {
+		                                       MontageIndex = 0;
+	                                       },
+	                                       MontageToPlay->GetPlayLength(), false);
+	if (!IsValid(MontageToPlay))
+	{
+		EndAbility(Handle, ActorInfo, ActivationInfo, true, true);
+		return;
+	}
+
+	if (MontageData.bUseMotionWarping)
+	{
+		const FVector TargetLocation = FMotionWarpingHelper::FindNearestMotionWarpTarget(
+			Character, AEnemyCharacter::StaticClass());
+
+		FMotionWarpingHelper::ApplyMotionWarping(Character, MontageData.WarpTargetName, TargetLocation,
+		                                         MontageData.WarpTargetOffset);
+	}
+
+	auto Task =
+		UAbilityTask_PlayMontageAndWaitEvent::CreatePlayMontageAndWaitProxy(
+			this, NAME_None, MontageToPlay, FGameplayTagContainer(), MontageData.PlayRate);
+
+	Task->OnCancelled.AddUniqueDynamic(this, &ThisClass::OnCancelled);
+	Task->OnInterrupted.AddUniqueDynamic(this, &ThisClass::OnCancelled);
+	Task->OnCompleted.AddUniqueDynamic(this, &ThisClass::OnCompleted);
+	Task->EventReceived.AddUniqueDynamic(this, &ThisClass::OnEventReceived);
+	Task->ReadyForActivation();
 }

@@ -7,103 +7,99 @@
 #include "AbilitySystemInterface.h"
 #include "GameplayEffectTypes.h"
 #include "GameplayTagContainer.h"
-#include "Core/Interfaces/WeaponInterface.h"
 #include "Core/Types/AbilityTypes.h"
-#include "Core/Types/PawnTypes.h"
-#include "Components/BaseAbilitySystemComponent.h"
+#include "Components/RLAbilitySystemComponent.h"
+#include "Core/Interfaces/WeaponInterface.h"
 #include "BaseCharacter.generated.h"
 
 enum class EAbilityInputID : uint8;
 /**
  *
  */
-UCLASS()
-class ROGUELIKE_API ABaseCharacter : public AGASPCharacter, public IAbilitySystemInterface, public IWeaponInterface {
-    GENERATED_BODY()
+UCLASS(Abstract)
+class ROGUELIKE_API ABaseCharacter : public AGASPCharacter, public IAbilitySystemInterface, public IWeaponInterface
+{
+	GENERATED_BODY()
 
-    uint8 bAbilitiesInitialized : 1 { false };
-
-    // friend UPawnAttributeSet
+	uint8 bAbilitiesInitialized : 1 {false};
 
 protected:
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    FGameplayTag DeadTag;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	FGameplayTag DeadTag;
 
-    UPROPERTY()
-    TObjectPtr<UBaseAbilitySystemComponent> AbilitySystemComponent;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-    TMap<EAbilityInputID, TSubclassOf<UGameplayAbility>> GameplayAbilities;
-    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
-    TArray<TSubclassOf<class UGameplayEffect>> PassiveGameplayEffects;
-    UPROPERTY()
-    TObjectPtr<class UPawnAttributeSet> AttributeSet;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<URLAbilitySystemComponent> AbilitySystemComponent{};
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TMap<EAbilityInputID, TSubclassOf<UGameplayAbility>> GameplayAbilities;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "GAS")
+	TArray<TSubclassOf<UGameplayEffect>> PassiveGameplayEffects;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TObjectPtr<class UPawnAttributeSet> AttributeSet{};
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Replicated)
+	TObjectPtr<class UWeaponComponent> WeaponComponent{};
 
-    UFUNCTION(BlueprintCallable)
-    void GiveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& GameplayEffects) const;
-    UFUNCTION(BlueprintCallable)
-    void RemoveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& EffectsToRemove) const;
-    UFUNCTION(BlueprintCallable)
-    void GiveGameplayAbilities(TMap<EAbilityInputID, TSubclassOf<UGameplayAbility>> AbilitiesToGive);
-    UFUNCTION(BlueprintCallable)
-    void RemoveGameplayAbility(const UGameplayAbility* AbilityToRemove);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Ability")
+	TMap<FGameplayTag, TObjectPtr<class UAbilityAnimSetDataAsset>> AbilitiesAnimAsset;
 
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-    UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_CurrentWeapon)
-    TObjectPtr<ABaseWeapon> CurrentWeapon {};
-    // or in meta replace BlueprintBaseOnly to AllowAbstract = false
-    UPROPERTY(EditDefaultsOnly, meta = (BlueprintBaseOnly))
-    TArray<TSubclassOf<ABaseWeapon>> Weapons;
-    UPROPERTY(VisibleInstanceOnly, BlueprintReadWrite, Replicated)
-    TArray<TObjectPtr<ABaseWeapon>> SpawnedWeapons;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    int32 LeftWeaponIndex { 0 };
-    UPROPERTY(EditAnywhere, BlueprintReadOnly)
-    int32 RightWeaponIndex { 0 };
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 public:
-    ABaseCharacter(const FObjectInitializer& ObjectInitializer);
-    ABaseCharacter() = default;
+	UPROPERTY(BlueprintReadWrite, Category = "Ability")
+	int32 MontageIndex;
 
-    virtual bool HasWeapon(EWeaponSlot WeaponSlot = EWeaponSlot::None) override;
-    virtual ABaseWeapon* GetCurrentWeapon(EWeaponSlot WeaponSlot = EWeaponSlot::None) override
-    {
-        if (WeaponSlot == EWeaponSlot::None)
-            return nullptr;
+	ABaseCharacter(const FObjectInitializer& ObjectInitializer);
+	ABaseCharacter() = default;
 
-        return CurrentWeapon;
-    };
 
-    UFUNCTION()
-    virtual void OnRep_CurrentWeapon(ABaseWeapon* OldPrimaryWeapon);
-    UFUNCTION()
-    virtual void SpawnWeapons();
+	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
 
-    virtual bool CanAttack() const override;
-    virtual bool CanEquipWeapon() const override;
-    virtual void BeginPlay() override;
-    virtual void Tick(float DeltaSeconds) override;
+	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
+	virtual UPawnAttributeSet* GetAttributeSet() const;
 
-    virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
-    virtual UPawnAttributeSet* GetAttributeSet() const;
+	UFUNCTION(BlueprintCallable)
+	void TryUseAbility(const EAbilityInputID AbilityInputID, const bool bPressed);
 
-    UFUNCTION(BlueprintCallable)
-    void TryUseAbility(EAbilityInputID AbilityInputID, bool bPressed);
+	virtual void OnHealthChanged(const FOnAttributeChangeData& Data)
+	{
+	}
 
-    virtual void OnHealthChanged(const FOnAttributeChangeData& Data) {};
-    virtual void OnDamaged(const FOnAttributeChangeData& Data) {};
+	virtual void OnDamaged(const FOnAttributeChangeData& Data)
+	{
+	}
+
+	virtual void Jump() override;
+
+	virtual bool HasWeapons() override;
+	virtual bool SwitchWeapon(const FGameplayTag& WeaponSlot, int32 Index) const override;
+	virtual int32 GetEquippedWeaponsSize() const override;
+
+	virtual ABaseWeapon* GetWeaponInSlot(const FGameplayTag Slot) override;
+
+	UFUNCTION(BlueprintPure)
+	UAbilityAnimSetDataAsset* GetAbilitiesAnimAsset(const FGameplayTag SearchTag) const;
+
+	UFUNCTION(BlueprintCallable)
+	void GiveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& GameplayEffects) const;
+	UFUNCTION(BlueprintCallable)
+	void RemoveGameplayEffects(const TArray<TSubclassOf<UGameplayEffect>>& EffectsToRemove) const;
+	UFUNCTION(BlueprintCallable)
+	void GiveGameplayAbilities(TMap<EAbilityInputID, TSubclassOf<UGameplayAbility>> AbilitiesToGive);
+	UFUNCTION(BlueprintCallable)
+	void RemoveGameplayAbility(const UGameplayAbility* AbilityToRemove) const;
 };
+
+inline UAbilityAnimSetDataAsset* ABaseCharacter::GetAbilitiesAnimAsset(const FGameplayTag SearchTag) const
+{
+	return AbilitiesAnimAsset.Contains(SearchTag) ? *AbilitiesAnimAsset.Find(SearchTag) : nullptr;
+}
 
 inline UAbilitySystemComponent* ABaseCharacter::GetAbilitySystemComponent() const
 {
-    return StaticCast<UAbilitySystemComponent*>(AbilitySystemComponent);
+	return static_cast<UAbilitySystemComponent*>(AbilitySystemComponent);
 }
 
 inline UPawnAttributeSet* ABaseCharacter::GetAttributeSet() const
 {
-    return AttributeSet;
+	return AttributeSet;
 }
-
-// inline void ABaseCharacter::OnDamaged(const FOnAttributeChangeData& Data) {}
-//
-// inline void ABaseCharacter::OnHealthChanged(const FOnAttributeChangeData& Data) {}

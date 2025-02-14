@@ -50,25 +50,31 @@ void UDamageEffectExecutionCalculation::Execute_Implementation(
 	EvaluateParams.SourceTags = SourceTags;
 	EvaluateParams.TargetTags = TargetTags;
 
-	float Health{ 0.f };
+	float Health{0.f};
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetDamageCapture().HealthDef, EvaluateParams, Health);
-	float MaxHealth{ 0.f };
+	float MaxHealth{0.f};
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetDamageCapture().MaxHealthDef, EvaluateParams,
-		MaxHealth);
-	float Defence{ 0.f };
+	                                                           MaxHealth);
+	float Defence{0.f};
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetDamageCapture().DefenceDef, EvaluateParams, Defence);
 
-	float Strength{ 0.f };
+	float Strength{0.f};
 	ExecutionParams.AttemptCalculateCapturedAttributeMagnitude(GetDamageCapture().StrengthDef, EvaluateParams,
-		Strength);
+	                                                           Strength);
 
+	float ArmorPenetration{0.f};
 	// HPDefenderResult = (HPDefender + DefenceDefender) - DamageAttacker
 	// TODO: Bring OutDamage to standard
 	// Standard: DMG = DMG * (1 - (Defence / (Defence + Modifiers)))
-	float OutDamage{ FMath::Clamp(Strength * (1 - Defence / 100), 0.f, UE_MAX_FLT) };
+	// Apply armor penetration
+	float EffectiveDefence = FMath::Max(Defence * (1.f - ArmorPenetration), 0.f);
+    
+	// Improved damage reduction formula with diminishing returns
+	float ReducedDamage = FMath::Max(1.f - (EffectiveDefence / (EffectiveDefence + 100.f + (EffectiveDefence * 0.1f))), 0.1f);
+    
+	// Base damage calculation
+	const float OutDamage = FMath::Max(Strength * ReducedDamage, 0.f);
 
-	UE_LOG(LogTemp, Warning, TEXT("Damage: %f"), OutDamage)
-
-		OutExecutionOutput.AddOutputModifier(
-			FGameplayModifierEvaluatedData(GetDamageCapture().ReceivedDamageProperty, EGameplayModOp::Additive, OutDamage));
+	OutExecutionOutput.AddOutputModifier(
+		FGameplayModifierEvaluatedData(GetDamageCapture().ReceivedDamageProperty, EGameplayModOp::Additive, OutDamage));
 }

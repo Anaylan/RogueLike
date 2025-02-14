@@ -10,7 +10,8 @@
  *
  */
 UCLASS()
-class ROGUELIKE_API UDamageEffectExecutionCalculation : public UGameplayEffectExecutionCalculation {
+class ROGUELIKE_API UDamageEffectExecutionCalculation : public UGameplayEffectExecutionCalculation
+{
     GENERATED_BODY()
 
 public:

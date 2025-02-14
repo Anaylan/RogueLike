@@ -2,12 +2,11 @@
 
 #include "Core/Player/BasePlayerState.h"
 #include "Core/Abilities/Attributes/PawnAttributeSet.h"
-#include "Components/BaseAbilitySystemComponent.h"
+#include "Components/RLAbilitySystemComponent.h"
 
 ABasePlayerState::ABasePlayerState()
 {
-	AbilitySystemComponent = CreateDefaultSubobject<UBaseAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
-	AbilitySystemComponent->SetIsReplicated(true);
+	AbilitySystemComponent = CreateDefaultSubobject<URLAbilitySystemComponent>(TEXT("AbilitySystemComponent"));
 	AbilitySystemComponent->SetReplicationMode(EGameplayEffectReplicationMode::Mixed);
 
 	AttributeSet = CreateDefaultSubobject<UPawnAttributeSet>(TEXT("AttributeSet"));

@@ -3,10 +3,15 @@
 #include "Core/Abilities/GameplayAbility_CharacterCrouch.h"
 #include "Actors/Characters/BaseCharacter.h"
 
+UGameplayAbility_CharacterCrouch::UGameplayAbility_CharacterCrouch()
+{
+	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
+}
+
 void UGameplayAbility_CharacterCrouch::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
-	const FGameplayAbilityActorInfo* ActorInfo,
-	const FGameplayAbilityActivationInfo ActivationInfo,
-	const FGameplayEventData* TriggerEventData)
+                                                       const FGameplayAbilityActorInfo* ActorInfo,
+                                                       const FGameplayAbilityActivationInfo ActivationInfo,
+                                                       const FGameplayEventData* TriggerEventData)
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
@@ -18,7 +23,7 @@ void UGameplayAbility_CharacterCrouch::ActivateAbility(const FGameplayAbilitySpe
 			return;
 		}
 
-		ABaseCharacter* Character = CastChecked<ABaseCharacter>(GetAvatarActorFromActorInfo());
+		ABaseCharacter* Character = CastChecked<ABaseCharacter>(ActorInfo->AvatarActor.Get());
 		if (Character->GetGait() == EGait::Sprint)
 		{
 			EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
